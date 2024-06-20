@@ -21,9 +21,9 @@ pipeline {
             steps {
                 script {
                     // Checkout the Git repository using specified credentials
-                    git credentialsId: "${GIT_CREDENTIALS}",
-                        url: "${GIT_REPO_URL}",
-                        branch: 'main'
+                    checkout([$class: 'GitSCM',
+                              branches: [[name: 'main']],
+                              userRemoteConfigs: [[url: "${GIT_REPO_URL}", credentialsId: "${GIT_CREDENTIALS}"]]])
                 }
             }
         }
@@ -76,20 +76,18 @@ pipeline {
             steps {
                 script {
                     try {
-                        // Configure Git user info
+                        // Configure Git user info (if not already configured globally)
                         sh """
                         git config --global user.name "lubern5"
                         git config --global user.email "lubern5@yahoo.com"
                         """
-                        
-                        // Add and commit the updated deployment file
+
+                        // Add, commit, and push deployment file changes
                         sh "git add deployment.yml"
                         sh "git commit -m 'Update deployment file to ${IMAGE_TAG}'"
-                        
+
                         // Push changes to GitHub repository
-                        withCredentials([usernamePassword(credentialsId: "${GIT_CREDENTIALS}", usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                            sh 'git push https://github.com/Lubern5/gitops_argocd_project.git main'
-                        }
+                        sh "git push ${GIT_REPO_URL} main"
                     } catch (Exception e) {
                         echo "Failed to push changes to Git: ${e.message}"
                         error "Git push failed"
