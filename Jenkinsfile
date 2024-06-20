@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USERNAME = credentials('dockerhub-username') // Jenkins credential ID for DockerHub username
+        DOCKERHUB_USERNAME = 'lubern5'
         APP_NAME = 'gitops-argo-app'
         IMAGE_TAG = "${BUILD_NUMBER}"
         IMAGE_NAME = "${DOCKERHUB_USERNAME}/${APP_NAME}"
@@ -60,7 +60,7 @@ pipeline {
             steps {
                 script {
                     sh """
-                    sed -i 's|${APP_NAME}:.*|${APP_NAME}:${IMAGE_TAG}|g' deployment.yml
+                    sed -i "s|${APP_NAME}.*|${APP_NAME}:${IMAGE_TAG}|g" deployment.yml
                     cat deployment.yml
                     cat service.yml
                     """
