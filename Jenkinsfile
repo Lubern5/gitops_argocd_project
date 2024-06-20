@@ -22,7 +22,7 @@ pipeline {
             steps {
                 script {
                     git credentialsId: 'github',
-                        url: 'https://github.com/Lubern5/gitops_argocd_project',
+                        url: 'https://github.com/Lubern5/gitops_argocd_project.git',
                         branch: 'main'
                 }
             }
