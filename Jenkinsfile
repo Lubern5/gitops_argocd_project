@@ -20,7 +20,7 @@ pipeline {
             steps {
                 script {
                     git credentialsId: 'github',
-                        url: 'https://github.com/Lubern5/gitops_argocd_project.git',
+                        url: 'https://github.com/Lubern5/gitops_argocd_project',
                         branch: 'main'
                 }
             }
@@ -29,7 +29,10 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def docker_image = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+                    // Build the Docker image with the specified tag
+                    def dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
+                    // Store dockerImage as a global variable
+                    env.DOCKER_IMAGE = dockerImage
                 }
             }
         }
@@ -37,9 +40,11 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
+                    // Push the Docker image to the registry
                     docker.withRegistry('', REGISTRY_CREDS) {
-                        docker_image.push("${IMAGE_TAG}")
-                        docker_image.push('latest')
+                        // Use the global variable for dockerImage
+                        env.DOCKER_IMAGE.push("${IMAGE_TAG}")
+                        env.DOCKER_IMAGE.push('latest')
                     }
                 }
             }
@@ -48,6 +53,7 @@ pipeline {
         stage('Delete Docker Images') {
             steps {
                 script {
+                    // Remove the local Docker images (optional step)
                     sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
                     sh "docker rmi ${IMAGE_NAME}:latest"
                 }
