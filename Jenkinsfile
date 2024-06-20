@@ -76,6 +76,13 @@ pipeline {
                     git add deployment.yml
                     git commit -m "updated the deployment file"
                     """
+
+
+                    withCredentials([gitUsernamePassword(credentialsId: 'github', gitToolName: 'Default')]) {
+    // some block
+
+                    git push "https://github.com/Lubern5/gitops_argocd_project.git" main
+}
                 }
             }
         }
