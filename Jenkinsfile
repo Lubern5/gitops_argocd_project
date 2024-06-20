@@ -29,10 +29,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image with the specified tag
-                    def dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
-                    // Store dockerImage as a global variable
-                    env.DOCKER_IMAGE = dockerImage
+                    def docker_image = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
                 }
             }
         }
@@ -40,11 +37,11 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    // Push the Docker image to the registry
                     docker.withRegistry('', REGISTRY_CREDS) {
-                        // Use the global variable for dockerImage
-                        env.DOCKER_IMAGE.push("${IMAGE_TAG}")
-                        env.DOCKER_IMAGE.push('latest')
+                        // Retrieve the built docker image
+                        def dockerImage = docker.image("${IMAGE_NAME}:${IMAGE_TAG}")
+                        dockerImage.push()
+                        dockerImage.push('latest')
                     }
                 }
             }
@@ -53,7 +50,6 @@ pipeline {
         stage('Delete Docker Images') {
             steps {
                 script {
-                    // Remove the local Docker images (optional step)
                     sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
                     sh "docker rmi ${IMAGE_NAME}:latest"
                 }
