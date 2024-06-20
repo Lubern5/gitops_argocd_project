@@ -6,8 +6,7 @@ pipeline {
         APP_NAME = 'gitops-argo-app'
         IMAGE_TAG = "${BUILD_NUMBER}"
         IMAGE_NAME = "${DOCKERHUB_USERNAME}/${APP_NAME}"
-        REGISTRY_CREDS = 'dockerhub' // Jenkins credential ID for DockerHub credentials
-        GIT_CREDENTIALS = 'github' // Jenkins credential ID for Git credentials
+        GIT_CREDENTIALS = 'github' // Jenkins credential ID for GitHub credentials
         GIT_REPO_URL = 'https://github.com/Lubern5/gitops_argocd_project.git' // Git repository URL
     }
     
@@ -21,8 +20,8 @@ pipeline {
         stage('Checkout SCM') {
             steps {
                 script {
-                    git credentialsId: 'github',
-                        url: 'https://github.com/Lubern5/gitops_argocd_project.git',
+                    git credentialsId: "${GIT_CREDENTIALS}",
+                        url: "${GIT_REPO_URL}",
                         branch: 'main'
                 }
             }
@@ -39,7 +38,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    docker.withRegistry('', REGISTRY_CREDS) {
+                    docker.withRegistry('', 'dockerhub') {
                         def dockerImage = docker.image("${IMAGE_NAME}:${IMAGE_TAG}")
                         dockerImage.push()
                         dockerImage.push('latest')
