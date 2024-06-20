@@ -80,7 +80,7 @@ pipeline {
                         """
                         
                         withCredentials([usernamePassword(credentialsId: GIT_CREDENTIALS, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
-                            sh "git push ${GIT_REPO_URL} main"
+                            sh 'git push https://github.com/Lubern5/gitops_argocd_project.git main'
                         }
                     } catch (Exception e) {
                         echo "Failed to push changes to Git: ${e.message}"
