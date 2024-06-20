@@ -87,7 +87,7 @@ pipeline {
                         sh "git commit -m 'Update deployment file to ${IMAGE_TAG}'"
                         
                         // Push changes to GitHub repository
-                        withCredentials([usernamePassword(credentialsId: 'github', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        withCredentials([usernamePassword(credentialsId: github, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                             sh 'git push https://github.com/Lubern5/gitops_argocd_project.git main'
                         }
                     } catch (Exception e) {
