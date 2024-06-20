@@ -67,5 +67,17 @@ pipeline {
                 }
             }
         }
+        stage('Push the changed deployment file to Git'){
+            steps{
+                script{
+                    sh"""
+                    git config --global user.name "lubern5"
+                    git config --global user.email "lubern5@yahoo.com"
+                    git add deployment.yml
+                    git commit -m "updated the deployment file"
+                    """
+                }
+            }
+        }
     }
 }
