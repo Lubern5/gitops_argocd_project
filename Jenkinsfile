@@ -20,6 +20,7 @@ pipeline {
         stage('Checkout SCM') {
             steps {
                 script {
+                    // Checkout the Git repository using specified credentials
                     git credentialsId: "${GIT_CREDENTIALS}",
                         url: "${GIT_REPO_URL}",
                         branch: 'main'
@@ -30,6 +31,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
+                    // Build Docker image
                     def dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
                 }
             }
@@ -38,6 +40,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
+                    // Push Docker image to DockerHub
                     docker.withRegistry('', 'dockerhub') {
                         def dockerImage = docker.image("${IMAGE_NAME}:${IMAGE_TAG}")
                         dockerImage.push()
@@ -50,6 +53,7 @@ pipeline {
         stage('Delete Docker Images') {
             steps {
                 script {
+                    // Clean up Docker images
                     sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
                     sh "docker rmi ${IMAGE_NAME}:latest"
                 }
@@ -59,6 +63,7 @@ pipeline {
         stage('Updating Kubernetes Deployment File') {
             steps {
                 script {
+                    // Update deployment file with new Docker image tag
                     sh """
                     sed -i "s|${APP_NAME}.*|${APP_NAME}:${IMAGE_TAG}|g" deployment.yml
                     cat deployment.yml
@@ -71,13 +76,17 @@ pipeline {
             steps {
                 script {
                     try {
+                        // Configure Git user info
                         sh """
                         git config --global user.name "lubern5"
                         git config --global user.email "lubern5@yahoo.com"
-                        git add deployment.yml
-                        git commit -m "Update deployment file to ${IMAGE_TAG}"
                         """
                         
+                        // Add and commit the updated deployment file
+                        sh "git add deployment.yml"
+                        sh "git commit -m 'Update deployment file to ${IMAGE_TAG}'"
+                        
+                        // Push changes to GitHub repository
                         withCredentials([usernamePassword(credentialsId: GIT_CREDENTIALS, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                             sh 'git push https://github.com/Lubern5/gitops_argocd_project.git main'
                         }
