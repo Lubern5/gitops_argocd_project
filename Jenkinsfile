@@ -8,7 +8,7 @@ pipeline {
         IMAGE_NAME = "${DOCKERHUB_USERNAME}/${APP_NAME}"
         REGISTRY_CREDS = 'dockerhub' // Jenkins credential ID for DockerHub credentials
         GIT_CREDENTIALS = 'github' // Jenkins credential ID for Git credentials
-        GIT_REPO_URL = 'https://github.com/Lubern5/gitops_argocd_project.git'
+        GIT_REPO_URL = 'https://github.com/Lubern5/gitops_argocd_project.git' // Git repository URL
     }
     
     stages {
@@ -31,13 +31,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    def docker_image
-                    try {
-                        docker_image = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
-                    } catch (Exception e) {
-                        echo "Failed to build Docker image: ${e.message}"
-                        error "Build failed"
-                    }
+                    def dockerImage = docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
                 }
             }
         }
@@ -45,16 +39,10 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 script {
-                    try {
-                        docker.withRegistry('', REGISTRY_CREDS) {
-                            // Retrieve the built docker image
-                            def dockerImage = docker.image("${IMAGE_NAME}:${IMAGE_TAG}")
-                            dockerImage.push()
-                            dockerImage.push('latest')
-                        }
-                    } catch (Exception e) {
-                        echo "Failed to push Docker image: ${e.message}"
-                        error "Push failed"
+                    docker.withRegistry('', REGISTRY_CREDS) {
+                        def dockerImage = docker.image("${IMAGE_NAME}:${IMAGE_TAG}")
+                        dockerImage.push()
+                        dockerImage.push('latest')
                     }
                 }
             }
@@ -63,12 +51,8 @@ pipeline {
         stage('Delete Docker Images') {
             steps {
                 script {
-                    try {
-                        sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
-                        sh "docker rmi ${IMAGE_NAME}:latest"
-                    } catch (Exception e) {
-                        echo "Failed to delete Docker images: ${e.message}"
-                    }
+                    sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG}"
+                    sh "docker rmi ${IMAGE_NAME}:latest"
                 }
             }
         }
@@ -76,30 +60,26 @@ pipeline {
         stage('Updating Kubernetes Deployment File') {
             steps {
                 script {
-                    try {
-                        sh """
-                        sed -i "s|${APP_NAME}.*|${APP_NAME}:${IMAGE_TAG}|g" deployment.yml
-                        cat deployment.yml
-                        cat service.yml
-                        """
-                    } catch (Exception e) {
-                        echo "Failed to update Kubernetes deployment file: ${e.message}"
-                        error "Update failed"
-                    }
+                    sh """
+                    sed -i "s|${APP_NAME}.*|${APP_NAME}:${IMAGE_TAG}|g" deployment.yml
+                    cat deployment.yml
+                    """
                 }
             }
         }
         
-        stage('Push the changed deployment file to Git') {
+        stage('Commit and Push Deployment File') {
             steps {
                 script {
                     try {
+                        sh """
                         git config --global user.name "lubern5"
                         git config --global user.email "lubern5@yahoo.com"
                         git add deployment.yml
-                        git commit -m "updated the deployment file"
+                        git commit -m "Update deployment file to ${IMAGE_TAG}"
+                        """
                         
-                        withCredentials([gitUsernamePassword(credentialsId: GIT_CREDENTIALS, gitToolName: 'Default')]) {
+                        withCredentials([usernamePassword(credentialsId: GIT_CREDENTIALS, usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
                             sh "git push ${GIT_REPO_URL} main"
                         }
                     } catch (Exception e) {
