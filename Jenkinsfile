@@ -2,11 +2,11 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_USERNAME = "lubern5"
-        APP_NAME = "gitops-argo-app"
+        DOCKERHUB_USERNAME = credentials('dockerhub-username') // Jenkins credential ID for DockerHub username
+        APP_NAME = 'gitops-argo-app'
         IMAGE_TAG = "${BUILD_NUMBER}"
         IMAGE_NAME = "${DOCKERHUB_USERNAME}/${APP_NAME}"
-        REGISTRY_CREDS = 'dockerhub'
+        REGISTRY_CREDS = 'dockerhub' // Jenkins credential ID for DockerHub credentials
     }
     
     stages {
@@ -55,13 +55,14 @@ pipeline {
                 }
             }
         }
-        stage('updateing kubernetes deployment file'){
-            steps{
-                script{
-
+        
+        stage('Updating Kubernetes Deployment File') {
+            steps {
+                script {
                     sh """
+                    sed -i 's|${APP_NAME}:.*|${APP_NAME}:${IMAGE_TAG}|g' deployment.yml
                     cat deployment.yml
-                    sed -i 's/${APP_NAME}.*/'
+                    cat service.yml
                     """
                 }
             }
