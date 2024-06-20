@@ -1,4 +1,4 @@
-FROM python:3.9-slime-buster
+FROM python:3.9-buster
 RUN pip install flask
 WORKDIR /app
 COPY app.py .
